@@ -106,7 +106,9 @@ defmodule ChannelSpec.Testing do
 
       schema = socket_schema["channels"][topic]["messages"][event]["replies"][status]
 
-      case Xema.validate(schema, reply) do
+      json_reply = reply |> Jason.encode!() |> Jason.decode!()
+
+      case Xema.validate(schema, json_reply) do
         :ok ->
           :ok
 
