@@ -102,7 +102,7 @@ defmodule ChannelSpec.Socket do
               end
           end
 
-        subscriptions = module.__channel_subscriptions__()
+        subscriptions = get_module_subscriptions(module)
 
         {topic, %{messages: ops_tree, subscriptions: subscriptions}}
       end
@@ -230,7 +230,7 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Event{} = event, _router, _prefix) do
-    operations = event.module.__channel_operations__()
+    operations = get_module_operations(event.module)
 
     case Enum.find(operations, fn {function, _} -> function == event.function end) do
       nil ->
@@ -251,7 +251,7 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Delegate{} = delegate, _router, _prefix) do
-    operations = delegate.module.__channel_operations__()
+    operations = get_module_operations(delegate.module)
 
     for {event, operation} <- operations, is_binary(event) do
       %{
@@ -267,7 +267,7 @@ defmodule ChannelSpec.Socket do
 
   defp get_operations(%ChannelHandler.Dsl.Handle{} = handle, router, prefix) do
     if function_exported?(router, :__channel_operations__, 0) do
-      operations = router.__channel_operations__()
+      operations = get_module_operations(router)
 
       case Enum.find(operations, fn {operation, _} -> operation == prefix <> handle.name end) do
         nil ->
@@ -291,4 +291,20 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(_entity, _router, _prefix), do: []
+
+  defp get_module_operations(module) do
+    if function_exported?(module, :__channel_operations__, 0) do
+      module.__channel_operations__()
+    else
+      []
+    end
+  end
+
+  def get_module_subscriptions(module) do
+    if function_exported?(module, :__channel_subscriptions__, 0) do
+      module.__channel_subscriptions__()
+    else
+      []
+    end
+  end
 end
