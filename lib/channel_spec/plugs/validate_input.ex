@@ -7,12 +7,18 @@ defmodule ChannelSpec.Plugs.ValidateInput do
 
     schema = schemas["channels"][topic]["messages"][context.full_event]["payload"]
 
-    case Xema.validate(schema, payload) do
-      :ok ->
+    case schema do
+      nil ->
         {:cont, socket, payload, context}
 
-      {:error, %m{} = errors} ->
-        {:reply, {:error, "Invalid input: #{m.format_error(errors)}"}, socket}
+      _ ->
+        case Xema.validate(schema, payload) do
+          :ok ->
+            {:cont, socket, payload, context}
+
+          {:error, %m{} = errors} ->
+            {:reply, {:error, "Invalid input: #{m.format_error(errors)}"}, socket}
+        end
     end
   end
 end
