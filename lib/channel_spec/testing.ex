@@ -93,7 +93,13 @@ defmodule ChannelSpec.Testing do
   Same as `Phoenix.ChannelTest.assert_reply/3` but verifies the reply
   against the schema defined for the socket that handled the message.
   """
-  defmacro assert_reply_spec(ref, status, reply) do
+  defmacro assert_reply_spec(
+             ref,
+             status,
+             reply \\ quote do
+               _
+             end
+           ) do
     quote location: :keep do
       socket = Process.get(unquote(ref))
       assert_reply(unquote(ref), unquote(status), reply = unquote(reply))
@@ -102,31 +108,33 @@ defmodule ChannelSpec.Testing do
       event = socket.assigns.__event__
       status = to_string(unquote(status))
 
-      socket_schema = socket.handler.__socket_schemas__()
+      with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
+           socket_schema = socket.handler.__socket_schemas__(),
+           %{} = schema <- socket_schema["channels"][topic]["messages"][event]["replies"][status] do
+        case Xema.validate(schema, reply) do
+          :ok ->
+            :ok
 
-      schema = socket_schema["channels"][topic]["messages"][event]["replies"][status]
+          {:error, %m{} = error} ->
+            raise SpecError,
+              message: """
+              Channel reply doesn't match reply spec for status #{status}:
 
-      case Xema.validate(schema, reply) do
-        :ok ->
-          :ok
+              Reply:
+                #{inspect(reply)}
 
-        {:error, %m{} = error} ->
-          raise SpecError,
-            message: """
-            Channel reply doesn't match reply spec for status #{status}:
+              Error:
+                #{m.format_error(error)}
 
-            Reply:
-              #{inspect(reply)}
+              Schema:
+                #{inspect(schema)}
+              """
+        end
 
-            Error:
-              #{m.format_error(error)}
-
-            Schema:
-              #{inspect(schema)}
-            """
+        reply
+      else
+        _ -> reply
       end
-
-      reply
     end
   end
 end

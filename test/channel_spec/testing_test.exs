@@ -121,5 +121,50 @@ defmodule ChannelSpec.TestingTest do
 
       assert error.message =~ "Channel reply doesn't match reply spec for status ok"
     end
+
+    @tag :capture_log
+    test "__socket_schemas__ is optional", %{mod: mod} do
+      defmodule :"#{mod}.RoomChannel" do
+        use Phoenix.Channel
+
+        def join("room:" <> _, _params, socket) do
+          {:ok, socket}
+        end
+
+        def handle_in(_, _, socket) do
+          {:reply, {:ok, :works}, socket}
+        end
+      end
+
+      defmodule :"#{mod}.UserSocket" do
+        use ChannelSpec.Socket
+
+        channel "room:*", :"#{mod}.RoomChannel"
+      end
+
+      defmodule :"#{mod}.Endpoint" do
+        use Phoenix.Endpoint, otp_app: :channel_spec
+
+        Phoenix.Endpoint.socket("/socket", :"#{mod}.UserSocket")
+
+        defoverridable config: 1, config: 2
+        def config(:pubsub_server), do: __MODULE__.PubSub
+        def config(which), do: super(which)
+        def config(which, default), do: super(which, default)
+      end
+
+      start_supervised({Phoenix.PubSub, name: :"#{mod}.Endpoint.PubSub"})
+
+      {:ok, _endpoint_pid} = start_supervised(:"#{mod}.Endpoint")
+
+      {:ok, _, socket} =
+        :"#{mod}.UserSocket"
+        |> build_socket("room:123", %{}, :"#{mod}.Endpoint")
+        |> subscribe_and_join(:"#{mod}.RoomChannel", "room:123")
+
+      ref = push(socket, "new_msg", %{"body" => 123})
+
+      assert_reply_spec ref, :ok, :works
+    end
   end
 end

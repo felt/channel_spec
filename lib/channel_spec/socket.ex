@@ -78,7 +78,9 @@ defmodule ChannelSpec.Socket do
   @doc false
   def build_ops_tree(channels) do
     channels =
-      for {topic, module, _opts} <- channels, into: %{} do
+      for {topic, module, _opts} <- channels,
+          function_exported?(module, :spark_dsl_config, 0),
+          into: %{} do
         router = module.spark_dsl_config()[[:router]]
         entities = if router, do: router.entities, else: []
 
