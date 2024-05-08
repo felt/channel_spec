@@ -6,7 +6,7 @@ defmodule ChannelSpec.Testing do
   defmacro __using__(_) do
     quote do
       import Phoenix.ChannelTest, except: [push: 3, subscribe_and_join: 3]
-      import unquote(__MODULE__), only: [push: 3, assert_reply_spec: 3, subscribe_and_join: 3]
+      import unquote(__MODULE__), only: [push: 3, assert_reply_spec: 2, assert_reply_spec: 3, subscribe_and_join: 3]
     end
   end
 
@@ -109,7 +109,8 @@ defmodule ChannelSpec.Testing do
            topic = socket.assigns.__channel_topic__,
            event = socket.assigns.__event__,
            status = to_string(unquote(status)),
-           %{} = schema <- socket_schema["channels"][topic]["messages"][event]["replies"][status] do
+           %{} = schema <-
+             socket_schema["channels"][topic]["messages"][event]["replies"][status] do
         case Xema.validate(schema, reply) do
           :ok ->
             :ok
