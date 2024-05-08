@@ -12,8 +12,8 @@ defmodule ChannelSpec.Plugs.ValidateInput do
         {:cont, socket, payload, context}
 
       _ ->
-        case Xema.validate(schema, payload) do
-          :ok ->
+        case Xema.cast(schema, payload) do
+          {:ok, _} ->
             {:cont, socket, payload, context}
 
           {:error, %m{} = errors} ->

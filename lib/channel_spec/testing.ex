@@ -6,7 +6,9 @@ defmodule ChannelSpec.Testing do
   defmacro __using__(_) do
     quote do
       import Phoenix.ChannelTest, except: [push: 3, subscribe_and_join: 3]
-      import unquote(__MODULE__), only: [push: 3, assert_reply_spec: 2, assert_reply_spec: 3, subscribe_and_join: 3]
+
+      import unquote(__MODULE__),
+        only: [push: 3, assert_reply_spec: 2, assert_reply_spec: 3, subscribe_and_join: 3]
     end
   end
 

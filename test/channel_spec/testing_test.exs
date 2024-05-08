@@ -177,7 +177,7 @@ defmodule ChannelSpec.TestingTest do
       ref = push(socket, "new_msg", %{"body" => 123})
 
       assert_raise ChannelSpec.Testing.SpecError, fn ->
-        assert_reply_spec ref, :ok
+        assert_reply_spec(ref, :ok)
       end
     end
 
