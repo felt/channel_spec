@@ -104,12 +104,11 @@ defmodule ChannelSpec.Testing do
       socket = Process.get(unquote(ref))
       assert_reply(unquote(ref), unquote(status), reply = unquote(reply))
 
-      topic = socket.assigns.__channel_topic__
-      event = socket.assigns.__event__
-      status = to_string(unquote(status))
-
       with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
            socket_schema = socket.handler.__socket_schemas__(),
+           topic = socket.assigns.__channel_topic__,
+           event = socket.assigns.__event__,
+           status = to_string(unquote(status)),
            %{} = schema <- socket_schema["channels"][topic]["messages"][event]["replies"][status] do
         case Xema.validate(schema, reply) do
           :ok ->
