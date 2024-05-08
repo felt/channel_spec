@@ -230,23 +230,27 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Event{} = event, _router, _prefix) do
-    operations = event.module.__channel_operations__()
+    if function_exported?(event.module, :__channel_operations__, 0) do
+      operations = event.module.__channel_operations__()
 
-    case Enum.find(operations, fn {function, _} -> function == event.function end) do
-      nil ->
-        []
+      case Enum.find(operations, fn {function, _} -> function == event.function end) do
+        nil ->
+          []
 
-      {_, operation} ->
-        [
-          %{
-            event: event.name,
-            schema: operation.schema,
-            module: event.module,
-            function: event.function,
-            file: operation.file,
-            line: operation.line
-          }
-        ]
+        {_, operation} ->
+          [
+            %{
+              event: event.name,
+              schema: operation.schema,
+              module: event.module,
+              function: event.function,
+              file: operation.file,
+              line: operation.line
+            }
+          ]
+      end
+    else
+      []
     end
   end
 
