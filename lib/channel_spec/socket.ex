@@ -102,7 +102,12 @@ defmodule ChannelSpec.Socket do
               end
           end
 
-        subscriptions = module.__channel_subscriptions__()
+        subscriptions =
+          if function_exported?(module, :__channel_subscriptions__, 0) do
+            module.__channel_subscriptions__()
+          else
+            %{}
+          end
 
         {topic, %{messages: ops_tree, subscriptions: subscriptions}}
       end
