@@ -9,17 +9,9 @@ defmodule ChannelSpec.MixProject do
       app: :channel_spec,
       version: @version,
       elixir: "~> 1.13",
-      start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
       package: package()
-    ]
-  end
-
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger]
     ]
   end
 
