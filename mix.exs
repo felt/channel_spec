@@ -26,7 +26,7 @@ defmodule ChannelSpec.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:channel_handler, "~> 0.1"},
+      {:channel_handler, "~> 0.6"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:mneme, "~> 0.5", only: [:dev, :test]},
       {:json_xema, "~> 0.6"},

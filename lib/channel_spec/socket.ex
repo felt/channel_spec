@@ -31,7 +31,7 @@ defmodule ChannelSpec.Socket do
     pattern = String.replace_suffix(topic_pattern, "*", "{string}")
     topic_pattern = String.replace(topic_pattern, ~r/\{.*\}.*/, "*")
 
-    quote do
+    quote location: :keep do
       opts =
         Keyword.update(
           unquote(opts),
@@ -60,11 +60,27 @@ defmodule ChannelSpec.Socket do
       end
 
       def __socket_tree__() do
-        unquote(__MODULE__).build_ops_tree(@__channels)
+        case ChannelSpec.Cache.adapter().get({__MODULE__, :socket_tree}) do
+          nil ->
+            tree = unquote(__MODULE__).build_ops_tree(@__channels)
+            ChannelSpec.Cache.adapter().put({__MODULE__, :socket_tree}, tree)
+            tree
+
+          tree ->
+            tree
+        end
       end
 
       def __socket_schemas__() do
-        unquote(__MODULE__).build_schemas(__socket_tree__())
+        case ChannelSpec.Cache.adapter().get({__MODULE__, :socket_schemas}) do
+          nil ->
+            tree = unquote(__MODULE__).build_schemas(__socket_tree__())
+            ChannelSpec.Cache.adapter().put({__MODULE__, :socket_schemas}, tree)
+            tree
+
+          tree ->
+            tree
+        end
       end
     end
   end
@@ -79,6 +95,7 @@ defmodule ChannelSpec.Socket do
   def build_ops_tree(channels) do
     channels =
       for {topic, module, _opts} <- channels,
+          Code.ensure_compiled(module),
           function_exported?(module, :spark_dsl_config, 0),
           into: %{} do
         router = module.spark_dsl_config()[[:router]]
@@ -235,6 +252,8 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Event{} = event, _router, _prefix) do
+    Code.ensure_compiled(event.module)
+
     if function_exported?(event.module, :__channel_operations__, 0) do
       operations = event.module.__channel_operations__()
 
@@ -260,17 +279,23 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Delegate{} = delegate, _router, _prefix) do
-    operations = delegate.module.__channel_operations__()
+    Code.ensure_compiled(delegate.module)
 
-    for {event, operation} <- operations, is_binary(event) do
-      %{
-        event: delegate.prefix <> event,
-        schema: operation.schema,
-        module: delegate.module,
-        function: :handle_in,
-        file: operation.file,
-        line: operation.line
-      }
+    if function_exported?(delegate.module, :__channel_operations__, 0) do
+      operations = delegate.module.__channel_operations__()
+
+      for {event, operation} <- operations, is_binary(event) do
+        %{
+          event: delegate.prefix <> event,
+          schema: operation.schema,
+          module: delegate.module,
+          function: :handle_in,
+          file: operation.file,
+          line: operation.line
+        }
+      end
+    else
+      []
     end
   end
 

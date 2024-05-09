@@ -16,6 +16,7 @@ defmodule Mix.Tasks.ChannelSpec.Routes do
 
     for {path, socket_module, _} <- endpoint_module.__sockets__() do
       try do
+        ChannelSpec.Cache.adapter().erase({socket_module, :socket_tree})
         socket_tree = socket_module.__socket_tree__()
         IO.puts(IO.ANSI.faint() <> "#{path}" <> IO.ANSI.reset())
         print_socket_routes(socket_module, socket_tree, opts)
