@@ -183,6 +183,7 @@ defmodule ChannelSpec.Operations do
     end
   end
 
+  @doc false
   def validate_operation(definition) do
     schema = Map.new(definition.schema)
 
@@ -205,6 +206,7 @@ defmodule ChannelSpec.Operations do
     end
   end
 
+  @doc false
   def validate_subscription(event, definition) do
     validate_schema!(["subscription #{inspect(event)}"], definition, definition.schema)
   end
