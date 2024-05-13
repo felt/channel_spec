@@ -86,16 +86,28 @@ defmodule ChannelSpec.Operations do
         _other, lines ->
           lines
       end)
+      |> Macro.escape()
 
-    quote location: :keep do
-      @operations {unquote(name),
-                   %{
-                     schema: unquote(params),
-                     file: unquote(file),
-                     line: unquote(line),
-                     module: unquote(module),
-                     line_metadata: unquote(Macro.escape(line_metadata))
-                   }}
+    quote location: :keep,
+          bind_quoted: [
+            name: name,
+            schema: params,
+            file: file,
+            line: line,
+            module: module,
+            line_metadata: line_metadata
+          ] do
+      operation = %{
+        schema: schema,
+        file: file,
+        line: line,
+        module: module,
+        line_metadata: line_metadata
+      }
+
+      @operations {name, operation}
+
+      def __channel_spec_operation__(unquote(name)), do: unquote(Macro.escape(operation))
     end
   end
 
@@ -106,7 +118,7 @@ defmodule ChannelSpec.Operations do
   @doc """
   Defines a subscription for the channel.
 
-  Subscriptions are messages that are sent from the server to the client, withuot
+  Subscriptions are messages that are sent from the server to the client, without
   the client requesting them. They are defined with a name and a schema that
   describes the payload.
 
@@ -128,17 +140,28 @@ defmodule ChannelSpec.Operations do
     file = __CALLER__.file
     line = __CALLER__.line
     module = __CALLER__.module
-    line_metadata = %{"event" => %{line: line}}
+    line_metadata = Macro.escape(%{"event" => %{line: line}})
 
-    quote do
-      @subscriptions {unquote(event),
-                      %{
-                        schema: unquote(schema),
-                        file: unquote(file),
-                        line: unquote(line),
-                        module: unquote(module),
-                        line_metadata: unquote(Macro.escape(line_metadata))
-                      }}
+    quote location: :keep,
+          bind_quoted: [
+            event: event,
+            file: file,
+            line: line,
+            module: module,
+            schema: schema,
+            line_metadata: line_metadata
+          ] do
+      subscription = %{
+        schema: schema,
+        file: file,
+        line: line,
+        module: module,
+        line_metadata: line_metadata
+      }
+
+      @subscriptions {event, subscription}
+
+      def __channel_spec_subscription__(unquote(event)), do: unquote(Macro.escape(subscription))
     end
   end
 
