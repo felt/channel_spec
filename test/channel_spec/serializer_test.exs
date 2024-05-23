@@ -20,41 +20,23 @@ defmodule ChannelSpec.SerializerTest do
         }
       }
 
-      string_schema =
+      converted_schema =
         schema
         |> Serializer.to_schema()
         |> Serializer.to_string()
+        |> Jason.decode!()
 
-      assert """
-             {
-               "properties": {
-                 "enum": {
-                   "enum": [
-                     "foo",
-                     "bar"
-                   ],
-                   "type": "string"
+      assert converted_schema == %{
+               "properties" => %{
+                 "enum" => %{"enum" => ["foo", "bar"], "type" => "string"},
+                 "one_of_array" => %{
+                   "items" => %{"one_of" => [%{"type" => "string"}, %{"type" => "number"}]},
+                   "type" => "array"
                  },
-                 "one_of_array": {
-                   "items": {
-                     "one_of": [
-                       {
-                         "type": "string"
-                       },
-                       {
-                         "type": "number"
-                       }
-                     ]
-                   },
-                   "type": "array"
-                 },
-                 "string": {
-                   "type": "string"
-                 }
+                 "string" => %{"type" => "string"}
                },
-               "type": "object"
-             }\
-             """ == string_schema
+               "type" => "object"
+             }
     end
   end
 end
