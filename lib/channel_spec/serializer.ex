@@ -8,6 +8,12 @@ defmodule Serializer do
         messages = Map.new(messages, fn {event, operation} -> {event, operation.schema} end)
         {:messages, messages}
 
+      {:required, required} when is_list(required) ->
+        {:required, required}
+
+      {:enum, enum} when is_list(enum) ->
+        {:enum, enum}
+
       {key, %Xema.Schema{} = schema} ->
         {key, Xema.Schema.to_map(schema)}
 
