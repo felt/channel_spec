@@ -62,9 +62,9 @@ defmodule Serializer do
     %{reverse_ordered | values: Enum.reverse(reverse_ordered.values)}
   end
 
-  def to_ordered_structs(list) when is_list(list) do
+  defp to_ordered_structs(list) when is_list(list) do
     Enum.map(list, &to_ordered_structs/1)
   end
 
-  def to_ordered_structs(stuff), do: stuff
+  defp to_ordered_structs(stuff), do: stuff
 end
