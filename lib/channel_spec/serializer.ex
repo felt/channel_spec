@@ -37,6 +37,34 @@ defmodule Serializer do
   def to_string(socket_tree) do
     socket_tree
     |> to_schema()
+    |> to_ordered_structs()
     |> Jason.encode!(pretty: true)
   end
+
+  # Helper function to ensure the order of the output json
+  @spec to_ordered_structs(map()) :: Jason.OrderedObject.t()
+  defp to_ordered_structs(map) when is_map(map) do
+    reverse_ordered =
+      map
+      |> Enum.to_list()
+      |> Enum.sort_by(fn {key, _val} -> key end, :asc)
+      |> Enum.reduce(%Jason.OrderedObject{}, fn
+        {key, value}, acc when is_map(value) ->
+          %{acc | values: [{key, to_ordered_structs(value)} | acc.values]}
+
+        {key, value}, acc when is_list(value) ->
+          %{acc | values: [{key, to_ordered_structs(value)} | acc.values]}
+
+        {key, value}, acc ->
+          %{acc | values: [{key, value} | acc.values]}
+      end)
+
+    %{reverse_ordered | values: Enum.reverse(reverse_ordered.values)}
+  end
+
+  defp to_ordered_structs(list) when is_list(list) do
+    Enum.map(list, &to_ordered_structs/1)
+  end
+
+  defp to_ordered_structs(stuff), do: stuff
 end
