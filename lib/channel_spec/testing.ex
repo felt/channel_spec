@@ -106,6 +106,8 @@ defmodule ChannelSpec.Testing do
       socket = Process.get(unquote(ref))
       assert_reply(unquote(ref), unquote(status), reply = unquote(reply))
 
+      normalized_reply = reply |> Jason.encode!() |> Jason.decode!()
+
       with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
            socket_schema = socket.handler.__socket_schemas__(),
            topic = socket.assigns.__channel_topic__,
@@ -113,7 +115,7 @@ defmodule ChannelSpec.Testing do
            status = to_string(unquote(status)),
            %{} = schema <-
              socket_schema["channels"][topic]["messages"][event]["replies"][status] do
-        case Xema.validate(schema, reply) do
+        case Xema.validate(schema, normalized_reply) do
           :ok ->
             :ok
 
