@@ -23,7 +23,7 @@ defmodule ChannelSpec.MixProject do
       {:mneme, "~> 0.5", only: [:dev, :test]},
       {:json_xema, "~> 0.6"},
       {:phoenix, "~> 1.7"},
-      {:xema, "~> 0.17"}
+      {:xema, "~> 0.17.2"}
     ]
   end
 
