@@ -18,6 +18,41 @@ defmodule ChannelSpec.Schema do
 
   defp compile_refs(schema, refs, opts)
 
+  defp compile_refs(%{schema: schema} = operation, refs, opts) do
+    {schema, refs} =
+      if schema[:replies] do
+        {replies, refs} =
+          for {reply, schema} <- schema[:replies], reduce: {%{}, refs} do
+            {replies, refs} ->
+              {schema, refs} = compile_refs(schema, refs, opts)
+              {Map.put(replies, reply, schema), refs}
+          end
+
+        {Map.put(schema, :replies, replies), refs}
+      else
+        {schema, refs}
+      end
+
+    {schema, refs} =
+      if schema[:payload] do
+        {payload, refs} = compile_refs(schema[:payload], refs, opts)
+        {Map.put(schema, :payload, payload), refs}
+      else
+        {schema, refs}
+      end
+
+    {%{operation | schema: schema}, refs}
+  end
+
+  defp compile_refs(module, refs, opts) when is_atom(module) do
+    if function_exported?(module, :schema, 0) do
+      schema = module.schema()
+      compile_refs(schema, refs, opts)
+    else
+      {module, refs}
+    end
+  end
+
   defp compile_refs(%{"$ref": ref} = schema, refs, opts) do
     {ref_string, refs} =
       if Keyword.get(opts, :follow_refs, true) do

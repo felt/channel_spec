@@ -25,6 +25,9 @@ defmodule Serializer do
       {key, map} when is_map(map) ->
         {key, to_schema(map)}
 
+      {key, [atom | _] = list} when is_atom(atom) ->
+        {key, list}
+
       {key, list} when is_list(list) ->
         {key, Enum.map(list, &to_schema/1)}
 

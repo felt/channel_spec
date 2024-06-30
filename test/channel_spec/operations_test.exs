@@ -62,34 +62,34 @@ defmodule ChannelSpec.OperationsTest do
              } = operations["foo"]
     end
 
-    test "validates that the payload schema is a map", %{mod: mod} do
+    test "validates that the payload schema is valid", %{mod: mod} do
       assert %Operations.OperationError{} =
                err =
                catch_error(
                  defmodule :"#{mod}" do
                    use ChannelSpec.Operations
 
-                   operation :foo, payload: :string
+                   operation :foo, payload: 123
                    def foo(_params, _context, socket), do: {:noreply, socket}
                  end
                )
 
-      assert err.message == "The schema for payload is not a valid schema map.\n"
+      assert err.message == "The schema for payload is not a valid schema map or module.\n"
     end
 
-    test "validates that the replies schemas are maps", %{mod: mod} do
+    test "validates that the replies schemas are valid", %{mod: mod} do
       assert %Operations.OperationError{} =
                err =
                catch_error(
                  defmodule :"#{mod}" do
                    use ChannelSpec.Operations
 
-                   operation :foo, replies: %{ok: :string}
+                   operation :foo, replies: %{ok: 123}
                    def foo(_params, _context, socket), do: {:noreply, socket}
                  end
                )
 
-      assert err.message == "The schema for replies.ok is not a valid schema map.\n"
+      assert err.message == "The schema for replies.ok is not a valid schema map or module.\n"
     end
 
     test "validates that at least the payload schema is defined" do
@@ -182,19 +182,19 @@ defmodule ChannelSpec.OperationsTest do
              } = subscriptions
     end
 
-    test "validates that the schema is a map", %{mod: mod} do
+    test "validates that the schema is valid", %{mod: mod} do
       assert %Operations.OperationError{} =
                err =
                catch_error(
                  defmodule :"#{mod}" do
                    use ChannelSpec.Operations
 
-                   subscription "foo", :string
+                   subscription "foo", 123
                    def foo(_params, _context, socket), do: {:noreply, socket}
                  end
                )
 
-      assert err.message == ~s(The schema for subscription "foo" is not a valid schema map.\n)
+      assert err.message == ~s(The schema for subscription "foo" is not a valid schema map or module.\n)
     end
   end
 end

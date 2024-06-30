@@ -65,6 +65,8 @@ defmodule ChannelSpec.Operations do
     has_payload? = Keyword.has_key?(params, :payload)
     has_replies? = Keyword.has_key?(params, :replies)
 
+    params = Macro.prewalk(params, &expand_alias(&1, __CALLER__))
+
     if not has_payload? and not has_replies? do
       raise ArgumentError, "An operation must have at least a payload or replies schema"
     end
@@ -141,6 +143,7 @@ defmodule ChannelSpec.Operations do
     line = __CALLER__.line
     module = __CALLER__.module
     line_metadata = Macro.escape(%{"event" => %{line: line}})
+    schema = Macro.prewalk(schema, &expand_alias(&1, __CALLER__))
 
     quote location: :keep,
           bind_quoted: [
@@ -164,6 +167,11 @@ defmodule ChannelSpec.Operations do
       def __channel_spec_subscription__(unquote(event)), do: unquote(Macro.escape(subscription))
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:__attr__, 3}})
+
+  defp expand_alias(other, _env), do: other
 
   defmacro __before_compile__(_env) do
     quote location: :keep do
@@ -235,20 +243,20 @@ defmodule ChannelSpec.Operations do
   end
 
   defp validate_schema!(path, definition, schema) do
-    if not is_map(schema) do
+    if is_map(schema) or is_atom(schema) do
+      schema
+    else
       path_string = Enum.join(path, ".")
 
       raise %OperationError{
         message: """
-        The schema for #{path_string} is not a valid schema map.
+        The schema for #{path_string} is not a valid schema map or module.
         """,
         module: definition.module,
         file: definition.file,
         line: get_line(definition.line_metadata, path)
       }
     end
-
-    schema
   end
 
   defp get_line(_line_metadata, []) do
