@@ -194,7 +194,8 @@ defmodule ChannelSpec.OperationsTest do
                  end
                )
 
-      assert err.message == ~s(The schema for subscription "foo" is not a valid schema map or module.\n)
+      assert err.message ==
+               ~s(The schema for subscription "foo" is not a valid schema map or module.\n)
     end
   end
 end

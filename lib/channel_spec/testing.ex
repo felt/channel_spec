@@ -8,7 +8,16 @@ defmodule ChannelSpec.Testing do
       import Phoenix.ChannelTest, except: [push: 3, subscribe_and_join: 3]
 
       import unquote(__MODULE__),
-        only: [push: 3, assert_reply_spec: 2, assert_reply_spec: 3, subscribe_and_join: 3]
+        only: [
+          push: 3,
+          assert_reply_spec: 2,
+          assert_reply_spec: 3,
+          subscribe_and_join: 3,
+          assert_broadcast_spec: 3,
+          assert_broadcast_spec: 4,
+          assert_push_spec: 3,
+          assert_push_spec: 4
+        ]
     end
   end
 
@@ -138,6 +147,110 @@ defmodule ChannelSpec.Testing do
         reply
       else
         _ -> reply
+      end
+    end
+  end
+
+  @doc """
+  Same as `Phoenix.ChannelTest.assert_push/3` but verifies the message
+  against the subscription schema defined for the socket that handled the message.
+  """
+  defmacro assert_push_spec(
+             socket,
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)
+           ) do
+    quote do
+      assert_receive %Phoenix.Socket.Message{
+                       event: unquote(event),
+                       payload: unquote(payload) = payload
+                     },
+                     unquote(timeout)
+
+      socket = unquote(socket)
+      socket_schema = unquote(socket).handler.__socket_schemas__()
+      topic = unquote(socket).assigns.__channel_topic__
+      event = unquote(event)
+
+      with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
+           %{} = schema <-
+             socket_schema["channels"][topic]["subscriptions"][event] do
+        case Xema.validate(schema, payload) do
+          :ok ->
+            :ok
+
+          {:error, %m{} = error} ->
+            raise SpecError,
+              message: """
+              Channel push doesn't match spec for subscription #{event}:
+
+              Payload:
+                #{inspect(payload)}
+
+              Error:
+                #{m.format_error(error)}
+
+              Schema:
+                #{inspect(schema)}
+              """
+        end
+
+        payload
+      else
+        _ -> payload
+      end
+    end
+  end
+
+  @doc """
+  Same as `Phoenix.ChannelTest.assert_broadcast/3` but verifies the message
+  against the subscription schema defined for the socket that handled the message.
+  """
+  defmacro assert_broadcast_spec(
+             socket,
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)
+           ) do
+    quote do
+      assert_receive %Phoenix.Socket.Broadcast{
+                       event: unquote(event),
+                       payload: unquote(payload) = payload
+                     },
+                     unquote(timeout)
+
+      socket = unquote(socket)
+      socket_schema = unquote(socket).handler.__socket_schemas__()
+      topic = unquote(socket).assigns.__channel_topic__
+      event = unquote(event)
+
+      with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
+           %{} = schema <-
+             socket_schema["channels"][topic]["subscriptions"][event] do
+        case Xema.validate(schema, payload) do
+          :ok ->
+            :ok
+
+          {:error, %m{} = error} ->
+            raise SpecError,
+              message: """
+              Channel broadcast doesn't match spec for subscription #{event}:
+
+              Payload:
+                #{inspect(payload)}
+
+              Error:
+                #{m.format_error(error)}
+
+              Schema:
+                #{inspect(schema)}
+              """
+        end
+
+        payload
+      else
+        _ -> payload
       end
     end
   end
