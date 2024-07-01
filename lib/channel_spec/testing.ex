@@ -173,10 +173,12 @@ defmodule ChannelSpec.Testing do
       topic = unquote(socket).assigns.__channel_topic__
       event = unquote(event)
 
+      normalized_payload = payload |> Jason.encode!() |> Jason.decode!()
+
       with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
            %{} = schema <-
              socket_schema["channels"][topic]["subscriptions"][event] do
-        case Xema.validate(schema, payload) do
+        case Xema.validate(schema, normalized_payload) do
           :ok ->
             :ok
 
@@ -225,10 +227,12 @@ defmodule ChannelSpec.Testing do
       topic = unquote(socket).assigns.__channel_topic__
       event = unquote(event)
 
+      normalized_payload = payload |> Jason.encode!() |> Jason.decode!()
+
       with true <- function_exported?(socket.handler, :__socket_schemas__, 0),
            %{} = schema <-
              socket_schema["channels"][topic]["subscriptions"][event] do
-        case Xema.validate(schema, payload) do
+        case Xema.validate(schema, normalized_payload) do
           :ok ->
             :ok
 
