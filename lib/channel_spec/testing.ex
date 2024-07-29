@@ -113,7 +113,8 @@ defmodule ChannelSpec.Testing do
            ) do
     quote location: :keep do
       socket = Process.get(unquote(ref))
-      assert_reply(unquote(ref), unquote(status), reply = unquote(reply))
+      assert_reply(unquote(ref), status, reply)
+      assert {unquote(status), unquote(reply)} = {status, reply}
 
       normalized_reply = reply |> Jason.encode!() |> Jason.decode!()
 
