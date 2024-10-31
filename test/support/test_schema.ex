@@ -14,7 +14,7 @@ defmodule ChannelSpec.SocketTest.LotsOfRefsSchema do
         properties: %{
           foo: %{"$ref": ChannelSpec.SocketTest.LotsOfRefsSchema.Foo},
           bar: %{type: :array, items: [%{"$ref": ChannelSpec.SocketTest.LotsOfRefsSchema.Bar}]},
-          flim: %{ type: :array, items: [%{"$ref": ChannelSpec.SocketTest.LotsOfRefsSchema.Flim}] }
+          flim: %{type: :array, items: [%{"$ref": ChannelSpec.SocketTest.LotsOfRefsSchema.Flim}]}
         },
         additionalProperties: false
       }
@@ -42,7 +42,7 @@ defmodule ChannelSpec.SocketTest.LotsOfRefsSchema do
 
   defmodule Foo do
     def schema() do
-      %{ oneOf: [ %{type: :null}, %{type: :string} ] }
+      %{oneOf: [%{type: :null}, %{type: :string}]}
     end
   end
 
@@ -66,8 +66,7 @@ defmodule ChannelSpec.SocketTest.LotsOfRefsSchema.Flam do
       properties: %{
         whatever: %{
           type: :array,
-          items: [ %{ type: :array, items: [%{type: :string}] }
-          ]
+          items: [%{type: :array, items: [%{type: :string}]}]
         }
       },
       additionalProperties: false
