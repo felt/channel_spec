@@ -608,8 +608,10 @@ defmodule ChannelSpec.SocketTest do
         `Map.update` with a default and generates a valid schema.
         """
 
+        mod_base = __MODULE__
+
         defmodule Base do
-          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+          @mod_base mod_base
 
           def schema() do
             %{
@@ -625,7 +627,7 @@ defmodule ChannelSpec.SocketTest do
         end
 
         defmodule Flim do
-          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+          @mod_base mod_base
 
           def schema() do
             %{
@@ -650,7 +652,7 @@ defmodule ChannelSpec.SocketTest do
         end
 
         defmodule Bar do
-          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+          @mod_base mod_base
 
           def schema() do
             %{type: :object, properties: %{baz: %{"$ref": :"#{@mod_base}.Baz"}}}
