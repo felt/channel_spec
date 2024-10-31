@@ -595,5 +595,82 @@ defmodule ChannelSpec.SocketTest do
 
       refute File.exists?(Path.join(tmp_dir, "schema.json"))
     end
+
+    @tag :tmp_dir
+    test "schemas nested in a single module with references work", %{
+      mod: mod,
+      tmp_dir: tmp_dir
+    } do
+      defmodule LotsOfRefsSchema.MyChannel do
+        use ChannelHandler.Router
+        use ChannelSpec.Operations
+
+        operation "foo", payload: %{"$ref": LotsOfRefsSchema.Base}
+        handle "foo", fn _params, _context, socket -> {:noreply, socket} end
+
+        subscription "sub", %{type: :integer}
+      end
+
+      defmodule LotsOfRefsSchema do
+        use ChannelSpec.Socket, schema_path: Path.join(tmp_dir, "schema.json")
+
+        channel "foo", __MODULE__.MyChannel, schema_file: Path.join(tmp_dir, "schema.json")
+      end
+
+      saved_json = Path.join(tmp_dir, "schema.json") |> File.read!() |> Jason.decode!()
+
+      auto_assert %{
+                    "channels" => %{
+                      "foo" => %{
+                        "messages" => %{
+                          "foo" => %{"payload" => %{"$ref" => "#/definitions/Base"}}
+                        },
+                        "subscriptions" => %{"sub" => %{"type" => "integer"}}
+                      }
+                    },
+                    "definitions" => %{
+                      "Bar" => %{
+                        "properties" => %{"baz" => %{"$ref" => "#/definitions/Baz"}},
+                        "type" => "object"
+                      },
+                      "Base" => %{
+                        "additionalProperties" => false,
+                        "properties" => %{
+                          "bar" => %{
+                            "items" => [%{"$ref" => "#/definitions/Bar"}],
+                            "type" => "array"
+                          },
+                          "flim" => %{
+                            "items" => [%{"$ref" => "#/definitions/Flim"}],
+                            "type" => "array"
+                          },
+                          "foo" => %{"$ref" => "#/definitions/Foo"}
+                        },
+                        "type" => "object"
+                      },
+                      "Baz" => %{"oneOf" => [%{"type" => "string"}, %{"type" => "null"}]},
+                      "Flam" => %{
+                        "additionalProperties" => false,
+                        "properties" => %{
+                          "whatever" => %{
+                            "items" => [%{"items" => [%{"type" => "string"}], "type" => "array"}],
+                            "type" => "array"
+                          }
+                        },
+                        "type" => "object"
+                      },
+                      "Flim" => %{
+                        "additionalProperties" => false,
+                        "properties" => %{
+                          "flam" => %{
+                            "oneOf" => [%{"type" => "null"}, %{"$ref" => "#/definitions/Flam"}]
+                          }
+                        },
+                        "type" => "object"
+                      },
+                      "Foo" => %{"oneOf" => [%{"type" => "null"}, %{"type" => "string"}]}
+                    }
+                  } <- saved_json
+    end
   end
 end
