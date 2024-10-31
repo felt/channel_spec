@@ -2,7 +2,7 @@ defmodule ChannelSpec.MixProject do
   use Mix.Project
 
   @repo_url "https://github.com/felt/channel_spec"
-  @version "0.1.8"
+  @version "0.1.10"
 
   def project do
     [
