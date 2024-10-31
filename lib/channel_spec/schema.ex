@@ -111,7 +111,7 @@ defmodule ChannelSpec.Schema do
             refs ->
               schema = ref.schema()
               refs = Map.put(refs, ref, schema)
-              refs = Map.update!(refs, :__unresolved_refs, &(&1 -- [ref]))
+              refs = Map.update(refs, :__unresolved_refs, [], &(&1 -- [ref]))
 
               {schema, refs} = compile_refs(schema, refs, [])
 
