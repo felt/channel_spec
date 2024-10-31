@@ -11,8 +11,7 @@ defmodule ChannelSpec.MixProject do
       elixir: "~> 1.13",
       deps: deps(),
       docs: docs(),
-      package: package(),
-      elixirc_paths: elixirc_paths(Mix.env())
+      package: package()
     ]
   end
 
@@ -52,8 +51,4 @@ defmodule ChannelSpec.MixProject do
       formatters: ["html"]
     ]
   end
-
-  # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
 end

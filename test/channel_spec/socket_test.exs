@@ -601,17 +601,95 @@ defmodule ChannelSpec.SocketTest do
       mod: mod,
       tmp_dir: tmp_dir
     } do
-      defmodule LotsOfRefsSchema.MyChannel do
+      defmodule :"#{mod}.LotsOfRefsSchema" do
+        @moduledoc """
+        This specific setup causes `__unresolved_refs` to get into a state that makes the schema
+        fail to compile. The PR in which this file was introduced switches from `Map.update!` to
+        `Map.update` with a default and generates a valid schema.
+        """
+
+        defmodule Base do
+          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+
+          def schema() do
+            %{
+              type: :object,
+              properties: %{
+                foo: %{"$ref": :"#{@mod_base}.Foo"},
+                bar: %{type: :array, items: [%{"$ref": :"#{@mod_base}.Bar"}]},
+                flim: %{type: :array, items: [%{"$ref": :"#{@mod_base}.Flim"}]}
+              },
+              additionalProperties: false
+            }
+          end
+        end
+
+        defmodule Flim do
+          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+
+          def schema() do
+            %{
+              type: :object,
+              properties: %{
+                flam: %{
+                  oneOf: [
+                    %{type: :null},
+                    %{"$ref": :"#{@mod_base}.Flam"}
+                  ]
+                }
+              },
+              additionalProperties: false
+            }
+          end
+        end
+
+        defmodule Foo do
+          def schema() do
+            %{oneOf: [%{type: :null}, %{type: :string}]}
+          end
+        end
+
+        defmodule Bar do
+          @mod_base Module.split(__MODULE__) |> Enum.drop(-1) |> Module.concat()
+
+          def schema() do
+            %{type: :object, properties: %{baz: %{"$ref": :"#{@mod_base}.Baz"}}}
+          end
+        end
+
+        defmodule Baz do
+          def schema() do
+            %{oneOf: [%{type: :string}, %{type: :null}]}
+          end
+        end
+      end
+
+      defmodule :"#{mod}.LotsOfRefsSchema.Flam" do
+        def schema() do
+          %{
+            type: :object,
+            properties: %{
+              whatever: %{
+                type: :array,
+                items: [%{type: :array, items: [%{type: :string}]}]
+              }
+            },
+            additionalProperties: false
+          }
+        end
+      end
+
+      defmodule :"#{mod}.MyChannel" do
         use ChannelHandler.Router
         use ChannelSpec.Operations
 
-        operation "foo", payload: %{"$ref": LotsOfRefsSchema.Base}
+        operation "foo", payload: %{"$ref": :"#{mod}.LotsOfRefsSchema.Base"}
         handle "foo", fn _params, _context, socket -> {:noreply, socket} end
 
         subscription "sub", %{type: :integer}
       end
 
-      defmodule LotsOfRefsSchema do
+      defmodule :"#{mod}" do
         use ChannelSpec.Socket, schema_path: Path.join(tmp_dir, "schema.json")
 
         channel "foo", __MODULE__.MyChannel, schema_file: Path.join(tmp_dir, "schema.json")
