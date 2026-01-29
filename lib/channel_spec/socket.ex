@@ -253,11 +253,6 @@ defmodule ChannelSpec.Socket do
 
   defp get_operations(%ChannelHandler.Dsl.Event{} = event, _router, _prefix) do
     Code.ensure_compiled!(event.module)
-    # Force module to be fully loaded. Code.ensure_compiled/1 can return before
-    # __before_compile__ callbacks have finished during parallel compilation.
-    # Calling module_info/0 ensures the module is fully loaded and all compile-time
-    # callbacks have completed, so __channel_operations__/0 will be available.
-    _ = event.module.module_info()
 
     if function_exported?(event.module, :__channel_operations__, 0) do
       operations = event.module.__channel_operations__()
@@ -285,8 +280,6 @@ defmodule ChannelSpec.Socket do
 
   defp get_operations(%ChannelHandler.Dsl.Delegate{} = delegate, _router, _prefix) do
     Code.ensure_compiled!(delegate.module)
-    # Force module to be fully loaded (see comment in Event clause above)
-    _ = delegate.module.module_info()
 
     if function_exported?(delegate.module, :__channel_operations__, 0) do
       operations = delegate.module.__channel_operations__()
