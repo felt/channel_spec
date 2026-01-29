@@ -17,12 +17,12 @@ jobs:
       # test stuff that isn't really relevant.
       # The other checks don't really care what environment they run in.
       MIX_ENV: dev
-      elixir: "1.15.4"
-      otp: "26.0.2"
+      elixir: "1.18.4"
+      otp: "27.2"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Elixir Project
         uses: ./.github/actions/elixir-setup

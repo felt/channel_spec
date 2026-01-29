@@ -252,7 +252,7 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Event{} = event, _router, _prefix) do
-    Code.ensure_compiled(event.module)
+    Code.ensure_compiled!(event.module)
 
     if function_exported?(event.module, :__channel_operations__, 0) do
       operations = event.module.__channel_operations__()
@@ -279,7 +279,7 @@ defmodule ChannelSpec.Socket do
   end
 
   defp get_operations(%ChannelHandler.Dsl.Delegate{} = delegate, _router, _prefix) do
-    Code.ensure_compiled(delegate.module)
+    Code.ensure_compiled!(delegate.module)
 
     if function_exported?(delegate.module, :__channel_operations__, 0) do
       operations = delegate.module.__channel_operations__()

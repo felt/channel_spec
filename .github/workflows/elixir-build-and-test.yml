@@ -11,23 +11,23 @@ on:
 jobs:
   build:
     name: Elixir Unit Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       MIX_ENV: test
     strategy:
       matrix:
         include:
-          - elixir-version: "1.13.4"
-            otp-version: "24.3"
-          - elixir-version: "1.13.4"
-            otp-version: "25.0.2"
-          - elixir-version: "1.14.3"
-            otp-version: "25.2"
-          - elixir-version: "1.15.5"
-            otp-version: "26"
+          - elixir-version: "1.15.7"
+            otp-version: "26.2"
+          - elixir-version: "1.16.3"
+            otp-version: "26.2"
+          - elixir-version: "1.17.3"
+            otp-version: "27.1"
+          - elixir-version: "1.18.4"
+            otp-version: "27.2"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Elixir Project
         uses: ./.github/actions/elixir-setup
